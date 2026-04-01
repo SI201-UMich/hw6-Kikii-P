@@ -5,7 +5,8 @@
 # Who or what you worked with on this homework (including generative AI like ChatGPT):
 # If you worked with generative AI also add a statement for how you used it.
 # 
-# I asked ChatGPT for help debugging and understanding the JSON structure, and made it explain what cache is in python. 
+# I asked ChatGPT to understand the data structure and made it explain what cache is in python.
+# I used ChatGPT to explain the error messages and used to debug my codes. 
 #
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
 #It aligned with my goals and guidelines. I did not rely on it to write the full code. 
