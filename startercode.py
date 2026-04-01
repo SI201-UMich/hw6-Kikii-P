@@ -57,7 +57,8 @@ def create_cache(dictionary, filename):
     RETURNS:
         None
     """
-    pass
+    with open(filename, "w", encoding="utf-8") as file:
+        json.dump(dictionary, file)
 
 
 def search_breed(breed_id):
@@ -74,7 +75,10 @@ def search_breed(breed_id):
         JSON body as a dict (with a top-level 'data' key on success), OR None if the
         request failed or the response does not represent a successful breed lookup.
     """
-    pass
+
+
+
+
 
 
 def update_cache(breed_ids, cache_file):
