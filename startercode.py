@@ -4,11 +4,12 @@
 # Your email: parkpark@umich.edu
 # Who or what you worked with on this homework (including generative AI like ChatGPT):
 # If you worked with generative AI also add a statement for how you used it.
-# e.g.:
-# Asked ChatGPT for help debugging and understanding the JSON structure
+# 
+# I asked ChatGPT for help debugging and understanding the JSON structure, and made it explain what cache is in python. 
 #
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
-#
+#It aligned with my goals and guidelines. I did not rely on it to write the full code. 
+
 # --- ARGUMENTS & EXPECTED RETURN VALUES PROVIDED --- #
 # --- SEE INSTRUCTIONS FOR FULL DETAILS ON METHOD IMPLEMENTATION --- #
 
@@ -75,6 +76,17 @@ def search_breed(breed_id):
         JSON body as a dict (with a top-level 'data' key on success), OR None if the
         request failed or the response does not represent a successful breed lookup.
     """
+   
+    try:
+        response = requests.get(f'https://dogapi.dog/api/v2/breeds/{breed_id}', timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if 'data' in data:
+            return (data, response.url) 
+        else :
+            return None
+    except :
+        return None
 
 
 
@@ -95,7 +107,32 @@ def update_cache(breed_ids, cache_file):
         A string: "Cached data for {percentage}% of breeds",
         where percentage = (successful_new_adds / len(breed_ids)) * 100.
     """
-    pass
+    
+    cache = load_json(cache_file)
+    if cache is None:
+        cache = {}
+
+    successful_adds = 0
+
+    for breed_id in breed_ids:
+        url = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
+
+        if url in cache:  # check using URL as key
+            continue
+
+        result = search_breed(breed_id)
+        if result is not None:
+            data, _ = result
+            cache[url] = data
+            successful_adds += 1
+
+    create_cache(cache, cache_file)
+
+    percentage = (successful_adds / len(breed_ids)) * 100 if breed_ids else 0
+
+    return f"Cached data for {percentage:.1f}% of breeds"
+
+
 
 
 def get_longest_lifespan_breed(cache_file):
@@ -110,7 +147,34 @@ def get_longest_lifespan_breed(cache_file):
         A tuple (breed_name, max_lifespan_integer) for the winning breed, OR the
         string "No breeds found" if no breed in the cache has a life.max value.
     """
-    pass
+
+    cache = load_json(cache_file)
+    if not cache:
+        return "No breeds found"
+
+    longest_breed = None
+    longest_lifespan = -1
+
+    for breed_data in cache.values():
+        attributes = breed_data.get('data', {}).get('attributes', {})
+        breed_name = attributes.get('name')
+        life_info = attributes.get('life', {})
+        max_life = life_info.get('max')
+
+        if not isinstance(max_life, (int, float)):
+            continue
+
+       
+        if (max_life > longest_lifespan) or (max_life == longest_lifespan and breed_name < longest_breed):
+            longest_lifespan = max_life
+            longest_breed = breed_name
+
+    if longest_breed is None:
+        return "No breeds found"
+    else:
+        return (longest_breed, longest_lifespan)
+   
+
 
 
 def get_groups_above_cutoff(cutoff, cache_file):
@@ -129,7 +193,28 @@ def get_groups_above_cutoff(cutoff, cache_file):
     RETURNS:
         A dictionary {group_uuid: count} for groups with count >= cutoff only.
     """
-    pass
+    
+    cache = load_json(cache_file)
+    if not cache:
+        return {}
+
+    group_counts = {}
+
+    for breed_data in cache.values():
+        
+        group_id = (breed_data.get("data", {}).get("relationships", {}).get("group", {}).get("data", {}).get("id"))
+
+        if group_id:  
+            group_counts[group_id] = group_counts.get(group_id, 0) + 1
+
+    
+    filtered_groups = {}
+    for gid, count in group_counts.items():
+        if count >= cutoff:
+            filtered_groups[gid] = count
+
+    return filtered_groups
+
 
 
 # Extra Credit
@@ -153,6 +238,9 @@ def recommend_breeds_in_same_group(breed_name, cache_file):
             "No group information available for '{breed_name}'."  (no group id)
             "No recommendations found based on '{breed_name}'."  (no other breeds in that group)
     """
+
+
+
 
 
 class TestHomeworkDogAPI(unittest.TestCase):
